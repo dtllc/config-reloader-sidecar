@@ -41,7 +41,7 @@ func main() {
 		}
 	}
 
-	log.Printf("starting with CONFIG_DIR=%s, PROCESS_NAME=%s, RELOAD_SIGNAL=%s\n", configDir, processName, reloadSignal)
+	log.Printf("starting reloader with CONFIG_DIR=%s, PROCESS_NAME=%s, RELOAD_SIGNAL=%s\n", configDir, processName, reloadSignal)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +94,6 @@ func findPIDs(process string) ([]int, error) {
 
 	var similar_processes []int
 	for _, p := range processes {
-		log.Printf("~~~~~ judging process: \n %s \n", p)
 		if p.Executable() == process {
 			log.Printf("found executable %s (pid: %d)\n", p.Executable(), p.Pid())
 			similar_processes = append(similar_processes, p.Pid())
@@ -105,7 +104,7 @@ func findPIDs(process string) ([]int, error) {
 	}
 
 
-	return nil, fmt.Errorf("no process matching %s found\n", process)
+	return nil, fmt.Errorf("no process matching %s found\n it may still be starting...", process) // TODO: this should be a WARNING not an ERROR
 }
 
 func reloadProcesses(process string, signal syscall.Signal) error {
@@ -113,6 +112,8 @@ func reloadProcesses(process string, signal syscall.Signal) error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("PIDs found: %d \n", pids)
 
 	for _, pid := range pids {
 		err = syscall.Kill(pid, signal)

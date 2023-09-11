@@ -19,6 +19,7 @@ RUN upx --best --lzma /config-reloader-sidecar
 # Runtime
 
 FROM gcr.io/distroless/static-debian11:latest
+# USER root # must be user root (default) to send OS signal
 
 COPY --from=upx /config-reloader-sidecar .
 
