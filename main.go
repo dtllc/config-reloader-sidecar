@@ -61,7 +61,7 @@ func main() {
 				}
 				if event.Op&fsnotify.Chmod != fsnotify.Chmod {
 					log.Println("modified file:", event.Name)
-					err := reloadProcess(processName, reloadSignal)
+					err := reloadProcesses(processName, reloadSignal)
 					if err != nil {
 						log.Println("error:", err)
 					}
@@ -86,33 +86,41 @@ func main() {
 	<-done
 }
 
-func findPID(process string) (int, error) {
+func findPIDs(process string) ([]int, error) {
 	processes, err := ps.Processes()
 	if err != nil {
-		return -1, fmt.Errorf("failed to list processes: %v\n", err)
+		return nil, fmt.Errorf("failed to list processes: %v\n", err)
 	}
 
+	var similar_processes []int
 	for _, p := range processes {
+		log.Printf("~~~~~ judging process: \n %s \n", p)
 		if p.Executable() == process {
 			log.Printf("found executable %s (pid: %d)\n", p.Executable(), p.Pid())
-			return p.Pid(), nil
+			similar_processes = append(similar_processes, p.Pid())
 		}
 	}
+	if len(similar_processes) > 0 {
+		return similar_processes, nil
+	}
 
-	return -1, fmt.Errorf("no process matching %s found\n", process)
+
+	return nil, fmt.Errorf("no process matching %s found\n", process)
 }
 
-func reloadProcess(process string, signal syscall.Signal) error {
-	pid, err := findPID(process)
+func reloadProcesses(process string, signal syscall.Signal) error {
+	pids, err := findPIDs(process)
 	if err != nil {
 		return err
 	}
 
-	err = syscall.Kill(pid, signal)
-	if err != nil {
-		return fmt.Errorf("could not send signal: %v\n", err)
-	}
+	for _, pid := range pids {
+		err = syscall.Kill(pid, signal)
+		if err != nil {
+			return fmt.Errorf("could not send signal: %v\n", err)
+		}
 
-	log.Printf("signal %s sent to %s (pid: %d)\n", signal, process, pid)
+		log.Printf("signal %s sent to %s (pid: %d)\n", signal, process, pid)
+	}
 	return nil
 }

@@ -1,0 +1,23 @@
+---
+apiVersion: skaffold/v2beta16
+kind: Config
+
+build:
+  artifacts:
+  - image: config-reloader-sidecar
+    custom:
+      buildCommand: docker buildx build .  -f Dockerfile -t "$IMAGE" $(if [ "$PUSH_IMAGE" = "true" ]; then echo "--push"; else echo "--load"; fi)
+      dependencies:
+        paths:
+        - Dockerfile
+
+profiles:
+- name: shared
+  build:
+    artifacts:
+    - image: config-reloader-sidecar
+      custom:
+        buildCommand: docker buildx build .  -f Dockerfile -t "$IMAGE" $(if [ "$PUSH_IMAGE" = "true" ]; then echo "--push"; else echo "--load"; fi)
+        dependencies:
+          paths:
+          - Dockerfile
