@@ -94,6 +94,7 @@ func findPIDs(process string) ([]int, error) {
 
 	var similar_processes []int
 	for _, p := range processes {
+		// log.Printf("found processes %v", p.Executable())
 		if p.Executable() == process {
 			log.Printf("found executable %s (pid: %d)\n", p.Executable(), p.Pid())
 			similar_processes = append(similar_processes, p.Pid())
