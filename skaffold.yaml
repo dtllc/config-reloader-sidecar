@@ -17,7 +17,7 @@ profiles:
     artifacts:
     - image: config-reloader-sidecar
       custom:
-        buildCommand: docker buildx build .  -f Dockerfile -t "$IMAGE" $(if [ "$PUSH_IMAGE" = "true" ]; then echo "--push"; else echo "--load"; fi)
+        buildCommand: docker buildx build . --platform linux/amd64,linux/arm64 -f Dockerfile -t "$IMAGE" $(if [ "$PUSH_IMAGE" = "true" ]; then echo "--push"; else echo "--load"; fi)
         dependencies:
           paths:
           - .
